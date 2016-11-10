@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="Globals">
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
     <HasSharedItems>true</HasSharedItems>
-    <ItemsProjectGuid>{45d41acc-2c3c-43d2-bc10-02aa73ffc7c7}</ItemsProjectGuid>
+    <ItemsProjectGuid>{52BE9AB6-C7BC-4F34-A682-6886619D4C93}</ItemsProjectGuid>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -12,5 +12,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)BaseHeader.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)BasicType.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)LayoutAbsolute.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)LayoutGrid.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Miqui.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Control.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Layout.cpp" />
   </ItemGroup>
 </Project>
