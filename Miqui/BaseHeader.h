@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DeviceResources.h"
+#include "DxBase.h"
 
 #include <d3d11_3.h>
 #include <d2d1_3.h>
@@ -15,3 +15,6 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
+//
+//#include <winrt/Windows.Foundation.h>
+//#include <winrt/Windows.UI.Xaml.Input.h>

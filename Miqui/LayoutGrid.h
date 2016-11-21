@@ -5,32 +5,32 @@
 namespace Miqui
 {
 
-class GridLayout:public Layout
+class GridLayout:public BaseLayout
 {
 public:
 	virtual ~GridLayout() {}
 
-	size_t columnCount() const { return m_columnCount; }
-	void setColumnCount(size_t c) { m_columnCount = c; }
-	void resetColumnCount() { this->setColumnCount(2); }
+	size_t ColumnCount() const { return m_columnCount; }
+	void ColumnCount(size_t c) { m_columnCount = c; }
+	void ResetColumnCount() { this->ColumnCount(1); }
 
-	virtual void layout(ControlContainer& container, std::list<IControl *>& controls) override
+	virtual void Layout(ControlContainer& container, std::list<IControl *>& controls) override
 	{
 		// 1. measuring
 		for (auto&&c : controls)
 		{
-			c->measuringSize();
+			c->MeasuringSize();
 		}
 
 		// 2. get container size and virtual size  -> each grid size
-		auto cColumn = columnCount();
+		auto cColumn = ColumnCount();
 		size_t cRow = (controls.size() / cColumn) + ((controls.size() % cColumn) ? 1 : 0);
 
-		float eachColumn = (container.width() - (container.leftPadding() + container.rightPadding())) / cColumn;
-		float eachRow = (container.height() - (container.topPadding() + container.bottomPadding())) / cRow;
+		float eachColumn = (container.Width() - (container.LeftPadding() + container.RightPadding())) / cColumn;
+		float eachRow = (container.Height() - (container.TopPadding() + container.BottomPadding())) / cRow;
 
-		float currentX = container.leftPadding();
-		float currentY = container.topPadding();
+		float currentX = container.LeftPadding();
+		float currentY = container.TopPadding();
 
 		size_t ccount = 0;
 		// 3. set size of each control
@@ -38,35 +38,35 @@ public:
 		{
 			switch (c->horizontalAlignment())
 			{
-			case HorizontalAlignment::Fill:
-				c->setWidth(eachColumn - (c->leftMargin() + c->rightMargin()));
-				c->setPositionX(currentX);
+			case HorizontalAlignmentType::Fill:
+				c->Width(eachColumn - (c->LeftMargin() + c->RightMargin()));
+				c->PositionX(currentX);
 				break;
-			case HorizontalAlignment::Left:
-				c->setPositionX(currentX);
+			case HorizontalAlignmentType::Left:
+				c->PositionX(currentX);
 				break;
-			case HorizontalAlignment::Center:
-				c->setPositionX(currentX + (eachColumn - (c->leftMargin() + c->rightMargin() + c->width())) / 2);
+			case HorizontalAlignmentType::Center:
+				c->PositionX(currentX + (eachColumn - (c->LeftMargin() + c->RightMargin() + c->Width())) / 2);
 				break;
-			case HorizontalAlignment::Right:
-				c->setPositionX(currentX + eachColumn - (c->leftMargin() + c->rightMargin() + c->width()));
+			case HorizontalAlignmentType::Right:
+				c->PositionX(currentX + eachColumn - (c->LeftMargin() + c->RightMargin() + c->Width()));
 				break;
 			}
 
 			switch (c->verticalAlignment())
 			{
-			case VerticalAlignment::Fill:
-				c->setHeight(eachRow - (c->topMargin() + c->bottomMargin()));
-				c->setPositionY(currentY);
+			case VerticalAlignmentType::Fill:
+				c->Height(eachRow - (c->TopMargin() + c->BottomMargin()));
+				c->PositionY(currentY);
 				break;
-			case VerticalAlignment::Top:
-				c->setPositionY(currentY);
+			case VerticalAlignmentType::Top:
+				c->PositionY(currentY);
 				break;
-			case VerticalAlignment::Center:
-				c->setPositionY(currentY + (eachRow - (c->topMargin() + c->bottomMargin() + c->height())) / 2);
+			case VerticalAlignmentType::Center:
+				c->PositionY(currentY + (eachRow - (c->TopMargin() + c->BottomMargin() + c->Height())) / 2);
 				break;
-			case VerticalAlignment::Bottom:
-				c->setPositionY(currentY + eachRow - (c->topMargin() + c->bottomMargin() + c->height()));
+			case VerticalAlignmentType::Bottom:
+				c->PositionY(currentY + eachRow - (c->TopMargin() + c->BottomMargin() + c->Height()));
 				break;
 			}
 
@@ -76,7 +76,7 @@ public:
 			{
 				ccount%= cColumn;
 				currentY += eachRow;
-				currentX = container.leftPadding();
+				currentX = container.LeftPadding();
 			} else
 			{
 				currentX += eachColumn;
@@ -89,7 +89,7 @@ public:
 	// Builder
 	struct Builder
 	{
-		operator std::shared_ptr<Layout>()
+		operator std::shared_ptr<BaseLayout>()
 		{
 			return obj;
 		}

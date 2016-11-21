@@ -6,7 +6,7 @@ namespace Miqui
 {
 
 
-class AbsoluteLayoutProperties: public LayoutProperties
+class AbsoluteLayoutProperties: public BaseLayoutProperties
 {
 public:
 	AbsoluteLayoutProperties() { this->resetPositionX(); this->resetPositionY(); }
@@ -37,7 +37,7 @@ public:
 
 		std::shared_ptr<AbsoluteLayoutProperties> obj;
 
-		operator std::shared_ptr<LayoutProperties>()
+		operator std::shared_ptr<BaseLayoutProperties>()
 		{
 			return obj;
 		}
@@ -54,33 +54,33 @@ private:
 	float m_positionY{};
 };
 
-class AbsoluteLayout:public Layout
+class AbsoluteLayout:public BaseLayout
 {
 public:
 	virtual ~AbsoluteLayout() {}
 
-	virtual void layout(ControlContainer&, std::list<IControl *>&) override {}
+	virtual void Layout(ControlContainer&, std::list<IControl *>&) override {}
 
-	virtual bool needUpdate() const override { return false; }
+	virtual bool NeedUpdate() const override { return false; }
 
-	virtual D2D1_POINT_2F queryPosition(IControl& control) override
+	virtual D2D1_POINT_2F QueryPosition(IControl& control) override
 	{
-		LayoutProperties * layoutp = control.layoutProperties().get();
+		BaseLayoutProperties * layoutp = control.LayoutProperties().get();
 		AbsoluteLayoutProperties * ap = dynamic_cast<AbsoluteLayoutProperties *>(layoutp);
 		if (ap == nullptr)
 		{
-			return{ control.translationX(),
-				control.translationY() };
+			return{ control.TranslationX(),
+				control.TranslationY() };
 		}
 
-		return{ ap->positionX() + control.translationX(),
-			ap->positionY() + control.translationY() };
+		return{ ap->positionX() + control.TranslationX(),
+			ap->positionY() + control.TranslationY() };
 	}
 
 	// Builder
 	struct Builder
 	{
-		operator std::shared_ptr<Layout>()
+		operator std::shared_ptr<BaseLayout>()
 		{
 			return obj;
 		}
