@@ -1,112 +1,8 @@
 #include "pch.h"
-#include "Miqui.Audio.AudioGraphControl.h"
+#include "Miqui.Audio.GraphDrawer.h"
 
 using namespace Miqui::Audio;
 using Microsoft::WRL::ComPtr;
-
-
-void AudioGraphControl::CreateDeviceIndependentResources(Miqui::DeviceResources & resource)
-{
-	base_type::CreateDeviceIndependentResources(resource);
-	if (this->m_graphDrawer) m_graphDrawer->CreateDeviceIndependentResources(resource);
-}
-
-void AudioGraphControl::CreateDeviceDependentResources(Miqui::DeviceResources &resource)
-{
-	base_type::CreateDeviceDependentResources(resource);
-	if (this->m_graphDrawer) m_graphDrawer->CreateDeviceDependentResources(resource);
-}
-
-void AudioGraphControl::GraphDrawer(std::shared_ptr<BaseGraphDrawer> const & drawer)
-{ m_graphDrawer = drawer; m_graphDrawer->Parent(this); this->OnSizeChanged(); }
-
-std::shared_ptr<BaseGraphDrawer> AudioGraphControl::GraphDrawer() const noexcept
-{ return m_graphDrawer; }
-
-void AudioGraphControl::Update(Miqui::StepTimer& timer)
-{
-	if (m_graphDrawer) m_graphDrawer->Update(timer);
-}
-
-void AudioGraphControl::Render(Miqui::DeviceResources & resource)
-{
-	// draw background
-	base_type::Render(resource);
-
-	// draw drawer
-	if (m_graphDrawer) m_graphDrawer->Draw(resource);
-
-	// TODO Two Axis
-}
-
-void AudioGraphControl::OnPointerEvent(Miqui::PointerEvent &pe)
-{
-	if (m_graphDrawer) m_graphDrawer->OnPointerEvent(pe);
-}
-
-void Miqui::Audio::AudioGraphControl::XLimits(std::pair<float, float> const & v) noexcept
-{
-	if(this->m_xlimits == v) return; 
-	this->m_xlimits = v;
-	this->m_useXLimits = true;
-	this->Invalidate();
-}
-
-void Miqui::Audio::AudioGraphControl::YLimits(std::pair<float, float> const & v) noexcept
-{
-	if (this->m_ylimits == v) return;
-	this->m_ylimits = v;
-	this->m_useYLimits = true;
-	this->Invalidate();
-}
-
-void Miqui::Audio::AudioGraphControl::Limits(std::pair<float, float> const & x, std::pair<float, float> const & y) noexcept
-{
-	if(this->m_xlimits == x && this->m_ylimits ==y) return;
-	this->m_xlimits = x;
-	this->m_ylimits = y;
-	this->m_useXLimits = this->m_useYLimits = true;
-	Invalidate();
-}
-
-void Miqui::Audio::AudioGraphControl::HideXLimits() noexcept
-{
-	if(!m_useXLimits) return;
-	m_useXLimits = false; Invalidate();
-}
-
-void Miqui::Audio::AudioGraphControl::HideYLimits() noexcept
-{
-	if(!m_useYLimits) return;
-	m_useYLimits = false; Invalidate();
-}
-
-void AudioGraphControl::OnSizeChanged()
-{
-	if (this->m_graphDrawer)
-	{
-		D2D1_RECT_F rect{ 0.f,0.f, Width(), Height() };
-		m_graphDrawer->ControlRect(rect);
-	}
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -115,7 +11,7 @@ void AudioGraphControl::OnSizeChanged()
 
 //---------------------------------------------------implements GraphDrawers
 
-void BitmapBasedGraphDrawer::CreateDeviceDependentResources(Miqui::DeviceResources & resource)
+void BitmapBasedGraphDrawer::CreateDeviceDependentResources(Miqui::D2CanvasEvent & resource)
 {
 	this->CreateBitmap((UINT)m_drawerInfo.bitmapSize.width, (UINT)m_drawerInfo.bitmapSize.height, resource);
 	this->Reset(D2D1::ColorF{ D2D1::ColorF::Black });
@@ -126,7 +22,7 @@ void BitmapBasedGraphDrawer::BitmapSize(D2D1_SIZE_F size) noexcept
 	this->m_drawerInfo.bitmapSize = size;
 }
 
-void BitmapBasedGraphDrawer::CreateBitmap(UINT width, UINT height, Miqui::DeviceResources & resource)
+void BitmapBasedGraphDrawer::CreateBitmap(UINT width, UINT height, Miqui::D2CanvasEvent & resource)
 {
 	auto factory = resource.GetD2DFactory();
 	auto imgFactory = resource.GetWicImagingFactory();
@@ -163,14 +59,14 @@ void BitmapBasedGraphDrawer::Reset(D2D1::ColorF const & color)
 	m_drawerInfo.currentCount = 0;
 }
 
-void BitmapBasedGraphDrawer::Draw(Miqui::DeviceResources & resource)
+void BitmapBasedGraphDrawer::Draw(Miqui::D2CanvasEvent & resource)
 {
 	if (!m_drawerInfo.bitmap) return;
 
 
 	D2D1_RECT_F rect = this->ControlRect();
-	rect.top -= 1.f;
-	rect.bottom += 2.f;
+	//rect.top -= 1.f;
+	//rect.bottom += 2.f;
 
 	if (m_drawMethod == BitmapBasedGraphDrawMethod::RealtimeMode)
 	{
@@ -365,12 +261,12 @@ EditableWavetable::EditableWavetable()
 	this->TableSize(16);
 }
 
-void EditableWavetable::CreateDeviceIndependentResources(Miqui::DeviceResources & resource)
+void EditableWavetable::CreateDeviceIndependentResources(Miqui::D2CanvasEvent & resource)
 {
 	base_type::CreateDeviceIndependentResources(resource);
 }
 
-void EditableWavetable::CreateDeviceDependentResources(Miqui::DeviceResources & resource)
+void EditableWavetable::CreateDeviceDependentResources(Miqui::D2CanvasEvent & resource)
 {
 	base_type::CreateDeviceDependentResources(resource);
 }
@@ -378,12 +274,12 @@ void EditableWavetable::CreateDeviceDependentResources(Miqui::DeviceResources & 
 void EditableWavetable::Update(Miqui::StepTimer &)
 {}
 
-void EditableWavetable::Draw(Miqui::DeviceResources & resource)
+void EditableWavetable::Draw(Miqui::D2CanvasEvent & resource)
 {
 	auto ctx = resource.GetD2DDeviceContext();
 
 	//auto rect = this->ControlRect();
-	auto brush = Parent()->SolidColorBrush();
+	auto brush = resource.SolidColorBrush();
 	auto positions = this->PointPositions();
 
 
@@ -471,7 +367,6 @@ void EditableWavetable::OnPointerEvent(Miqui::PointerEvent &e)
 {
 	auto ppos = e.GetCurrentPoint().Position();
 	auto update = bool{ false };
-
 	switch (e.Mode())
 	{
 	case Miqui::PointerMode::Presssed:
@@ -516,9 +411,7 @@ void EditableWavetable::OnPointerEvent(Miqui::PointerEvent &e)
 
 	if (update)
 	{
-		GraphSampleHandler(miqs::ptr_begin(m_sampleBuffer), miqs::ptr_end(m_sampleBuffer), GraphSampleHandlerMode::Push);
+		GraphSampleHandler(GraphSampleHandlerMode::Push);
 		this->Invalidate();
 	}
 }
-
-

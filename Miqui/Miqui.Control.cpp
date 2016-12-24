@@ -23,7 +23,7 @@ void IControl::RequestLayout()
 }
 
 
-void Miqui::ControlContainer::Render(DeviceResources & resource)
+void Miqui::ControlContainer::Render(D2CanvasEvent & resource)
 
 {
 	IControl::Render(resource);
@@ -96,13 +96,13 @@ void ControlContainer::OnPointerEvent(PointerEvent& e)
 
 
 
-void ContentControl::CreateDeviceIndependentResources(Miqui::DeviceResources& resource)
+void ContentControl::CreateDeviceIndependentResources(Miqui::D2CanvasEvent& resource)
 {
 	IControl::CreateDeviceIndependentResources(resource);
 	if (m_contentControl)m_contentControl->CreateDeviceIndependentResources(resource);
 }
 
-void ContentControl::CreateDeviceDependentResources(Miqui::DeviceResources& resource)
+void ContentControl::CreateDeviceDependentResources(Miqui::D2CanvasEvent& resource)
 {
 	IControl::CreateDeviceDependentResources(resource);
 	if (m_contentControl)m_contentControl->CreateDeviceDependentResources(resource);
@@ -111,7 +111,7 @@ void ContentControl::CreateDeviceDependentResources(Miqui::DeviceResources& reso
 
 void ContentControl::Update(Miqui::StepTimer&timer) { IControl::Update(timer); if (m_contentControl)m_contentControl->Update(timer); }
 
-void ContentControl::Render(Miqui::DeviceResources& resource)
+void ContentControl::Render(Miqui::D2CanvasEvent& resource)
 {
 	//IControl::Render(resource);
 	if (m_contentControl)m_contentControl->Draw(resource);

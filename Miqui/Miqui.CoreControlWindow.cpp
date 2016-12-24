@@ -64,10 +64,15 @@ PointerEvent::PointerEvent(winrt::Windows::IInspectable const& sender, winrt::Wi
 }
 
 
+
+
 Miqui::CoreControlWindow::CoreControlWindow(const std::shared_ptr<DxBase::DeviceResources>& resource, DxBase::WinRTDx* base)
 	:IRenderer(resource), m_base{ base }
 {
+	m_drawEvent.DeviceResource(resource);
+
 	InitializeResources();
+
 	m_content.Layout(std::make_shared<GridLayout>());
 	m_content.CoreWindow(this);
 	m_content.Parent(nullptr);
@@ -155,6 +160,46 @@ void Miqui::CoreControlWindow::handleRequestedInvalidation()
 		if (m_base) m_base->SafeDraw();
 		m_invalidateRequested = true;
 	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//=================================================
+
+
+void D2CanvasEvent::DeviceResource(std::shared_ptr<DxBase::DeviceResources> resource) noexcept
+{
+	this->m_resource = resource;
+}
+
+void D2CanvasEvent::IndependentResource()
+{
+
+}
+
+void D2CanvasEvent::DependentResource()
+{
+	if (!m_resource) return;
+	auto ctx = m_resource->GetD2DDeviceContext();
+
+	ctx->CreateSolidColorBrush({}, m_solidColorBrush.ReleaseAndGetAddressOf());
+
 }
 
 

@@ -104,7 +104,7 @@ public:
 	}
 
 private:
-	size_t m_columnCount = 2;
+	size_t m_columnCount{ 1 };
 };
 
 

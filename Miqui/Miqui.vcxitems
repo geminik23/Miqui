@@ -22,13 +22,15 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Miqui.Audio.BasicType.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Miqui.Audio.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Miqui.Button.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Miqui.Audio.GraphDrawer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Miqui.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Miqui.Audio,AudioGraphControl.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Miqui.Audio.AudioGraphControl.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Miqui.Control.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Miqui.CoreControlWindow.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Miqui.Audio.GraphDrawer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Miqui.Layout.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Miqui.Button.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)VisualNode.cpp" />

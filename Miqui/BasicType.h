@@ -76,9 +76,10 @@ struct SignalEvent
 
 	void Remove(SignalEventKey key) { if (this->m_container.find(key.id) != m_container.end()) m_container->erase(key.id); }
 
-	void operator()(_Args... args) { 
+	void operator()(_Args... args)
+	{
 		for (auto&& v : m_container) v.second(std::forward<_Args>(args)...);
-		
+
 	}
 
 private:
@@ -212,19 +213,53 @@ private:
 
 
 
+
+struct D2CanvasEvent
+{
+	// D2D Accessors 
+	ID2D1Factory3*              GetD2DFactory() const { return m_resource->GetD2DFactory(); }
+	ID2D1Device2*               GetD2DDevice() const { return m_resource->GetD2DDevice(); }
+	ID2D1DeviceContext2*        GetD2DDeviceContext() const { return m_resource->GetD2DDeviceContext(); }
+	ID2D1Bitmap1*               GetD2DTargetBitmap() const { return m_resource->GetD2DTargetBitmap(); }
+	IDWriteFactory2*            GetDWriteFactory() const { return m_resource->GetDWriteFactory(); }
+	IWICImagingFactory2*        GetWicImagingFactory() const { return m_resource->GetWicImagingFactory(); }
+
+
+
+	winrt::Windows::Foundation::Size   GetLogicalSize() const { return m_resource->GetLogicalSize(); }
+
+	Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> SolidColorBrush() const noexcept { return m_solidColorBrush; }
+
+
+private:
+	friend class CoreControlWindow;
+	void DeviceResource(std::shared_ptr<DxBase::DeviceResources> resource) noexcept;
+
+	void IndependentResource();
+	void DependentResource();
+
+
+	Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> m_solidColorBrush;
+
+
+	std::shared_ptr<DxBase::DeviceResources> m_resource;
+};
+
+
+
 using DeviceResources = DxBase::DeviceResources;
 
 class IVisualNode
 {
 public:
-	virtual void CreateDeviceIndependentResources(DeviceResources&) =0;
-	virtual void CreateDeviceDependentResources(DeviceResources&) = 0;
-	virtual void CreateWindowSizeDependentResources(DeviceResources&) = 0;
-	virtual void ReleaseDeviceDependentResources(DeviceResources&) = 0;
+	virtual void CreateDeviceIndependentResources(D2CanvasEvent&) = 0;
+	virtual void CreateDeviceDependentResources(D2CanvasEvent&) = 0;
+	virtual void CreateWindowSizeDependentResources(D2CanvasEvent&) = 0;
+	virtual void ReleaseDeviceDependentResources(D2CanvasEvent&) = 0;
 	virtual void OnColorProfileChanged(winrt::Windows::Graphics::Display::DisplayInformation const &) = 0;
 
 	virtual void Update(StepTimer&) = 0;
-	virtual void Render(DeviceResources&) = 0;
+	virtual void Render(D2CanvasEvent&) = 0;
 
 
 	virtual void OnPointerEvent(PointerEvent &) = 0;
@@ -274,10 +309,10 @@ public:
 	virtual void Position(float posX, float posY) { m_position.x = posX; m_position.y = posY; }
 	virtual void Position(D2D1_POINT_2F position) { m_position = position; }
 
-	virtual void Width(float width) { m_size.width = width; OnSizeChanged();}
-	virtual void Height(float height) { m_size.height = height;  OnSizeChanged();}
-	virtual void Size(float width, float height) { m_size.width = width; m_size.height = height; OnSizeChanged();}
-	virtual void Size(D2D1_SIZE_F size) { m_size = size; OnSizeChanged();}
+	virtual void Width(float width) { m_size.width = width; OnSizeChanged(); }
+	virtual void Height(float height) { m_size.height = height;  OnSizeChanged(); }
+	virtual void Size(float width, float height) { m_size.width = width; m_size.height = height; OnSizeChanged(); }
+	virtual void Size(D2D1_SIZE_F size) { m_size = size; OnSizeChanged(); }
 
 	virtual void Pivot(float pivotX, float pivotY) { m_pivot.x = pivotX; m_pivot.y = pivotY; }
 	virtual void PivotX(float pivotX) { m_pivot.x = pivotX; }
@@ -328,34 +363,28 @@ public:
 	}
 
 
-	void BackgroundColor(D2D_COLOR_F const& color)noexcept { m_background = color;}
+	void BackgroundColor(D2D_COLOR_F const& color)noexcept { m_background = color; }
 	D2D_COLOR_F BackgroundColor() const noexcept { return m_background; }
 	void ForegroundColor(D2D_COLOR_F const& color)noexcept { m_foreground = color; }
-	D2D_COLOR_F ForegroundColor() const noexcept{ return m_foreground;}
+	D2D_COLOR_F ForegroundColor() const noexcept { return m_foreground; }
 
 
 
 
-	
+
 	virtual void Update(StepTimer&) override {}
-	virtual void Render(DxBase::DeviceResources& resource) override;
+	virtual void Render(D2CanvasEvent& resource) override;
 
-	virtual void CreateDeviceIndependentResources(DeviceResources&) override {}
-	virtual void CreateDeviceDependentResources(DeviceResources& resource)override
-	{
-		auto ctx = resource.GetD2DDeviceContext();
-		ctx->CreateSolidColorBrush(ForegroundColor(), this->m_solidColorBrush.ReleaseAndGetAddressOf());
-	}
-	virtual void CreateWindowSizeDependentResources(DeviceResources&) override {}
-	virtual void ReleaseDeviceDependentResources(DeviceResources&) override {}
+	virtual void CreateDeviceIndependentResources(D2CanvasEvent&) override {}
+	virtual void CreateDeviceDependentResources(D2CanvasEvent&)override{}
+	virtual void CreateWindowSizeDependentResources(D2CanvasEvent&) override {}
+	virtual void ReleaseDeviceDependentResources(D2CanvasEvent&) override {}
 	virtual void OnColorProfileChanged(winrt::Windows::Graphics::Display::DisplayInformation const &) override {}
 	virtual void OnPointerEvent(PointerEvent &) override {}
 
 
 
 
-	// dx resource get functions
-	Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> SolidColorBrush() const noexcept { return m_solidColorBrush; }
 
 
 protected:
@@ -370,9 +399,8 @@ protected:
 	CoreControlWindow * m_corewindow{ nullptr };
 
 	// color
-	D2D_COLOR_F m_background{ 0.f,0.f,0.f,1.f};
+	D2D_COLOR_F m_background{ 0.f,0.f,0.f,1.f };
 	D2D_COLOR_F m_foreground{ 1.f,1.f,1.f,1.f };
-	Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> m_solidColorBrush;
 
 
 	// translate
@@ -385,14 +413,14 @@ protected:
 
 	D2D1_POINT_2F m_position{ 0.0,0.0 };
 	D2D1_SIZE_F m_size{ 0.0,0.0 };
-	
+
 
 	bool m_visible = true;
 };
 
 
 
-inline void VisualNode::Render(DxBase::DeviceResources& resource)
+inline void VisualNode::Render(D2CanvasEvent& resource)
 {
 	auto ctx = resource.GetD2DDeviceContext();
 	auto localsize = this->Size();
@@ -403,7 +431,7 @@ inline void VisualNode::Render(DxBase::DeviceResources& resource)
 	rect.bottom = localsize.height + 1;
 
 
-	auto brush = this->SolidColorBrush();
+	auto brush = resource.SolidColorBrush();
 	brush->SetColor(BackgroundColor());
 
 	ctx->BeginDraw();
@@ -424,7 +452,7 @@ public:
 	virtual ~Container() {}
 	virtual void Update(StepTimer& st) { for (auto&n : m_nodes) { n->Update(st); } }
 
-	virtual void Render(DeviceResources& resource)
+	virtual void Render(D2CanvasEvent& resource)
 	{
 		auto context = resource.GetD2DDeviceContext();
 		for (auto&n : m_nodes)
@@ -443,13 +471,13 @@ public:
 		}
 	}
 
-	virtual void CreateDeviceIndependentResources(DeviceResources& resource) override { for (auto&n : m_nodes)n->CreateDeviceIndependentResources(resource); }
-	virtual void CreateDeviceDependentResources(DeviceResources& resource) override { for (auto&n : m_nodes)n->CreateDeviceDependentResources(resource); }
-	virtual void CreateWindowSizeDependentResources(DeviceResources& resource) override { for (auto&n : m_nodes)n->CreateWindowSizeDependentResources(resource); }
-	virtual void ReleaseDeviceDependentResources(DeviceResources& resource) override { for (auto&n : m_nodes)n->ReleaseDeviceDependentResources(resource); }
+	virtual void CreateDeviceIndependentResources(D2CanvasEvent& resource) override { for (auto&n : m_nodes)n->CreateDeviceIndependentResources(resource); }
+	virtual void CreateDeviceDependentResources(D2CanvasEvent& resource) override { for (auto&n : m_nodes)n->CreateDeviceDependentResources(resource); }
+	virtual void CreateWindowSizeDependentResources(D2CanvasEvent& resource) override { for (auto&n : m_nodes)n->CreateWindowSizeDependentResources(resource); }
+	virtual void ReleaseDeviceDependentResources(D2CanvasEvent& resource) override { for (auto&n : m_nodes)n->ReleaseDeviceDependentResources(resource); }
 	virtual void OnColorProfileChanged(winrt::Windows::Graphics::Display::DisplayInformation const & di) override { for (auto&n : m_nodes)n->OnColorProfileChanged(di); }
 
-	
+
 
 	void Remove(VisualNode * node) { node->Parent(nullptr); node->CoreWindow(nullptr); m_nodes.remove(node); }
 	void RemoveAll()
@@ -457,7 +485,7 @@ public:
 		for (auto&&n : m_nodes)	n->Parent(nullptr);
 		m_nodes.clear();
 	}
-	void Add(VisualNode * node) { m_nodes.push_back(node); node->Parent(this); node->CoreWindow(this->m_corewindow);}
+	void Add(VisualNode * node) { m_nodes.push_back(node); node->Parent(this); node->CoreWindow(this->m_corewindow); }
 
 private:
 	std::list<VisualNode *> m_nodes;
@@ -660,14 +688,14 @@ public:
 		for (auto&c : m_controls) { c->Update(st); }
 	}
 
-	virtual void CreateDeviceIndependentResources(DeviceResources& resource) override { base_type::CreateDeviceIndependentResources(resource); for (auto&n : m_controls)n->CreateDeviceIndependentResources(resource); }
-	virtual void CreateDeviceDependentResources(DeviceResources& resource) override { base_type::CreateDeviceDependentResources(resource); for (auto&n : m_controls)n->CreateDeviceDependentResources(resource); }
-	virtual void CreateWindowSizeDependentResources(DeviceResources& resource) override { base_type::CreateWindowSizeDependentResources(resource); this->m_layout->RequestUpdate(); for (auto&n : m_controls)n->CreateWindowSizeDependentResources(resource); }
-	virtual void ReleaseDeviceDependentResources(DeviceResources& resource) override { base_type::ReleaseDeviceDependentResources(resource); for (auto&n : m_controls)n->ReleaseDeviceDependentResources(resource); }
+	virtual void CreateDeviceIndependentResources(D2CanvasEvent& resource) override { base_type::CreateDeviceIndependentResources(resource); for (auto&n : m_controls)n->CreateDeviceIndependentResources(resource); }
+	virtual void CreateDeviceDependentResources(D2CanvasEvent& resource) override { base_type::CreateDeviceDependentResources(resource); for (auto&n : m_controls)n->CreateDeviceDependentResources(resource); }
+	virtual void CreateWindowSizeDependentResources(D2CanvasEvent& resource) override { base_type::CreateWindowSizeDependentResources(resource); this->m_layout->RequestUpdate(); for (auto&n : m_controls)n->CreateWindowSizeDependentResources(resource); }
+	virtual void ReleaseDeviceDependentResources(D2CanvasEvent& resource) override { base_type::ReleaseDeviceDependentResources(resource); for (auto&n : m_controls)n->ReleaseDeviceDependentResources(resource); }
 	virtual void OnColorProfileChanged(winrt::Windows::Graphics::Display::DisplayInformation const & di) override { base_type::OnColorProfileChanged(di); for (auto&n : m_controls)n->OnColorProfileChanged(di); }
 
 
-	virtual void Render(DeviceResources& resource)  override;
+	virtual void Render(D2CanvasEvent& resource)  override;
 	virtual void OnPointerEvent(PointerEvent&) override;
 
 	// layout
@@ -685,7 +713,7 @@ public:
 		}
 		m_controls.clear();
 	}
-	virtual void Add(IControl * c) { m_controls.push_back(c); c->Parent(this); c->CoreWindow(this->m_corewindow);}
+	virtual void Add(IControl * c) { m_controls.push_back(c); c->Parent(this); c->CoreWindow(this->m_corewindow); }
 	virtual IControl* At(size_t i)
 	{
 		auto it = m_controls.begin();
@@ -714,10 +742,10 @@ class ContentControl;
 struct IContentControl
 {
 	virtual void Update(Miqui::StepTimer&) = 0;
-	virtual void Draw(Miqui::DeviceResources&) = 0;
+	virtual void Draw(Miqui::D2CanvasEvent&) = 0;
 
-	virtual void CreateDeviceIndependentResources(Miqui::DeviceResources&) = 0;
-	virtual void CreateDeviceDependentResources(Miqui::DeviceResources&) = 0;
+	virtual void CreateDeviceIndependentResources(Miqui::D2CanvasEvent&) = 0;
+	virtual void CreateDeviceDependentResources(Miqui::D2CanvasEvent&) = 0;
 
 	virtual void OnPointerEvent(Miqui::PointerEvent&) {}
 
@@ -746,14 +774,14 @@ class ContentControl: public Miqui::IControl
 {
 public:
 	virtual ~ContentControl() {}
-	virtual void CreateDeviceIndependentResources(Miqui::DeviceResources&) override;
-	virtual void CreateDeviceDependentResources(Miqui::DeviceResources&) override;
-	//virtual void CreateWindowSizeDependentResources(Miqui::DeviceResources&) override;
-	//virtual void ReleaseDeviceDependentResources(Miqui::DeviceResources&) override;
+	virtual void CreateDeviceIndependentResources(Miqui::D2CanvasEvent&) override;
+	virtual void CreateDeviceDependentResources(Miqui::D2CanvasEvent&) override;
+	//virtual void CreateWindowSizeDependentResources(Miqui::D2CanvasEvent&) override;
+	//virtual void ReleaseDeviceDependentResources(Miqui::D2CanvasEvent&) override;
 	//virtual void OnColorProfileChanged(winrt::Windows::Graphics::Display::DisplayInformation const &) override;
 
 	virtual void Update(Miqui::StepTimer&timer) override;
-	virtual void Render(Miqui::DeviceResources&) override;
+	virtual void Render(Miqui::D2CanvasEvent&) override;
 
 	virtual void OnPointerEvent(Miqui::PointerEvent&) override;
 
@@ -782,18 +810,21 @@ class CoreControlWindow: public DxBase::IRenderer
 public:
 	CoreControlWindow(const std::shared_ptr<DxBase::DeviceResources>& resource, DxBase::WinRTDx* base);
 
-	virtual void CreateDeviceIndependentResources() override { this->m_content.CreateDeviceIndependentResources(*m_deviceResources); }
-	virtual void CreateDeviceDependentResources() override { this->m_content.CreateDeviceDependentResources(*m_deviceResources); }
+	virtual void CreateDeviceIndependentResources() override { m_drawEvent.IndependentResource(); this->m_content.CreateDeviceIndependentResources(m_drawEvent); }
+	virtual void CreateDeviceDependentResources() override { m_drawEvent.DependentResource();  this->m_content.CreateDeviceDependentResources(m_drawEvent); }
 
 	virtual void CreateWindowSizeDependentResources() override
 	{
 		auto size = m_deviceResources->GetD2DDeviceContext()->GetSize();
+		//auto size = m_drawEvent.GetLogicalSize();
 		m_content.Size(size.width, size.height);
-		this->m_content.CreateWindowSizeDependentResources(*m_deviceResources);
+		this->m_content.CreateWindowSizeDependentResources(m_drawEvent);
 	}
 
-	virtual void ReleaseDeviceDependentResources() override { this->m_content.ReleaseDeviceDependentResources(*m_deviceResources); }
+	virtual void ReleaseDeviceDependentResources() override { this->m_content.ReleaseDeviceDependentResources(m_drawEvent); }
 	virtual void OnColorProfileChanged(_In_ winrt::Windows::Graphics::Display::DisplayInformation const&arg) override { this->m_content.OnColorProfileChanged(arg); }
+
+
 
 	virtual void OnPointerPressed(winrt::Windows::IInspectable const& sender, winrt::Windows::UI::Xaml::Input::PointerRoutedEventArgs const&) override;
 	virtual void OnPointerMoved(winrt::Windows::IInspectable const& sender, winrt::Windows::UI::Xaml::Input::PointerRoutedEventArgs const&) override;
@@ -812,7 +843,7 @@ public:
 		// Update First
 		m_content.Update(timer);
 		// Render
-		m_content.Render(*m_deviceResources);
+		m_content.Render(m_drawEvent);
 
 		m_deviceResources->Present();
 	}
@@ -829,29 +860,31 @@ public:
 
 		if (m_deviceResources)
 		{
-			m_content.CreateDeviceIndependentResources(*m_deviceResources);
-			m_content.CreateDeviceDependentResources(*m_deviceResources);
-			m_content.CreateWindowSizeDependentResources(*m_deviceResources);
+			m_content.CreateDeviceIndependentResources(m_drawEvent);
+			m_content.CreateDeviceDependentResources(m_drawEvent);
+			m_content.CreateWindowSizeDependentResources(m_drawEvent);
 		}
 	}
 
 	void ImmediateInvalidate() noexcept { if (m_base)m_base->SafeDraw(); }
-	void Invalidate() noexcept { m_invalidateRequested = true;}
+	void Invalidate() noexcept { m_invalidateRequested = true; }
 
-	void SetWinRTDxBase(DxBase::WinRTDx* base) noexcept{ m_base = base;}
+	void SetWinRTDxBase(DxBase::WinRTDx* base) noexcept { m_base = base; }
 
 
 private:
 
 	bool CheckHandleNode(PointerEvent& pe);
-	
+
 	void handleRequestedInvalidation();
 
-	IControl * m_handledNode{ nullptr};
+	IControl * m_handledNode{ nullptr };
 	std::chrono::system_clock::time_point m_last;
 	Miqui::ControlContainer m_content;
 	DxBase::WinRTDx* m_base{ nullptr };
-	bool m_invalidateRequested{false};
+	bool m_invalidateRequested{ false };
+	D2CanvasEvent m_drawEvent;
+
 };
 
 
